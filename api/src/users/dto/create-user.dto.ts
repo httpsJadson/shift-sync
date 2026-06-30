@@ -25,6 +25,7 @@ export class CreateUserDto {
     @IsString()
     password: string;
 
+
     @ApiProperty({ description: 'The role of the user', required: false, enum: UserRole, example: UserRole.EMPLOYEE })
     @IsOptional()
     @IsEnum(UserRole)

@@ -4,16 +4,20 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { WorkScheduleModule } from './work-schedule/work-schedule.module';
 import { TimeRecordModule } from './time-record/time-record.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '../.env',
     }),
     DatabaseModule,
+    AuthModule,
     UsersModule,
     WorkScheduleModule,
     TimeRecordModule,
+
   ],
   controllers: [],
   providers: [],
