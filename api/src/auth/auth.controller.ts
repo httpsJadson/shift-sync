@@ -16,8 +16,9 @@ export class AuthController {
   ) {}
 
   @Post('/register')
-  create(@Body() createUserDto: CreateUserDto, @ActiveUser('role') activeUserRole: string) {
-    return this.usersService.create(createUserDto, activeUserRole);
+  create(@Body() createUserDto: CreateUserDto) {
+    // Para registro público, passamos null como activeUserRole para forçar EMPLOYEE
+    return this.usersService.create(createUserDto, null);
   }
 
   @Post("login")

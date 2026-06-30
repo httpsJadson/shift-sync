@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -20,7 +20,7 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async create(createUserDto: CreateUserDto, activeUserRole: string) {
+  async create(createUserDto: CreateUserDto, activeUserRole: string | null) {
     const { password, email, name, role, isActive } = createUserDto;
 
     const existingUser = await this.findByEmail(email);
@@ -131,15 +131,14 @@ export class UsersService {
   async remove(id: string) {
     const user = await this.findOne(id);
     if (!user.isActive) {
-      throw new HttpException('Cannot delete user', HttpStatus.BAD_REQUEST);
-    } else {
-    
-      try {
-        await this.userRepository.update(id, { isActive: false });
-        return { deleted: true, user };
-      } catch (error) {
-        throw new InternalServerErrorException('Error deleting user');
-      }
+      throw new BadRequestException('User is already inactive');
+    }
+
+    try {
+      await this.userRepository.update(id, { isActive: false });
+      return { deactivated: true, user: { ...user, isActive: false } };
+    } catch (error) {
+      throw new InternalServerErrorException('Error deactivating user');
     }
   }
 }

@@ -1,18 +1,26 @@
-import { Controller, Get, Body, Patch, Param, Delete, UseGuards, ForbiddenException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ForbiddenException, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { AuthTokenGuard } from 'src/common/guards/auth.guard';
-import { ApiBearerAuth } from 'node_modules/@nestjs/swagger/dist/decorators/api-bearer.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums/auxi.enums';
 import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @ApiBearerAuth()
-@UseGuards(AuthTokenGuard)
+@UseGuards(AuthTokenGuard, RolesGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Roles(UserRole.ADMIN)
+  @Post()
+  create(@Body() createUserDto: CreateUserDto, @ActiveUser('role') activeUserRole: string | null) {
+    return this.usersService.create(createUserDto, activeUserRole);
+  }
 
   @Roles(UserRole.ADMIN)
   @Get()
