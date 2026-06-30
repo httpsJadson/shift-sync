@@ -47,7 +47,7 @@ export class AuthService {
       });
 
       const user = await this.usersService.findOne(sub);
-      if (!user) {
+      if (!user || !user.isActive) {
         throw new UnauthorizedException('User not found');
       }
 
@@ -59,7 +59,7 @@ export class AuthService {
 
   async getMe(userId: string) {
     const user = await this.usersService.findOne(userId);
-    if (!user) {
+    if (!user || !user.isActive) {
       throw new UnauthorizedException('User not found');
     }
     const { password, ...result } = user;

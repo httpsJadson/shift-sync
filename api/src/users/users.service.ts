@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { HashingServiceProtocol } from 'src/auth/hashing/hashing.service';
 import { UserRole } from 'src/common/enums/auxi.enums';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class UsersService {
@@ -50,33 +51,95 @@ export class UsersService {
         createdAt: savedUser.createdAt,
         updatedAt: savedUser.updatedAt,
       };
-      
+
     } catch (error: any) {
+      if (error.code === '23505') {
+        throw new ConflictException(`User with email "${email}" already exists`);
+      }
       throw new InternalServerErrorException('Error creating user. Please try again later.');
     }
   }
 
-  findAll() {
-    return this.userRepository.find();
+  async findAll(query: PaginationDto) {
+    try {
+      const { page = 1, limit = 20, orderDir = 'asc' } = query;
+      const skip = (page - 1) * limit;
+      const [data, total] = await this.userRepository.findAndCount({
+        cache: true,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        order: orderDir === 'asc' ? { createdAt: 'ASC' } : { createdAt: 'DESC' },
+      });
+
+      return {
+        data,
+        meta: {
+          total,
+          page,
+          lastPage: Math.ceil(total / limit),
+        },
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Error retrieving users. Please try again later.');
+    }
   }
 
-  findOne(id: string) {
-    return this.userRepository.findOne({ where: { id } });
+  async findOne(id: string) {
+    const user = await this.userRepository.findOne({ 
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID "${id}" not found`);
+    }
+
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const existingUser = await this.findOne(id);
-    if (!existingUser) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    await this.findOne(id);
+
+    try {
+      await this.userRepository.update(id, updateUserDto);
+      return this.findOne(id);
+    } catch (error: any) {
+      if (error.code === '23505') {
+        throw new ConflictException('Email already in use by another user');
+      }
+      throw new InternalServerErrorException('Error updating user');
     }
-    return this.userRepository.update(id, updateUserDto);
   }
 
   async remove(id: string) {
-    const existingUser = await this.findOne(id);
-    if (!existingUser) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    const user = await this.findOne(id);
+    if (!user.isActive) {
+      throw new HttpException('Cannot delete user', HttpStatus.BAD_REQUEST);
+    } else {
+    
+      try {
+        await this.userRepository.update(id, { isActive: false });
+        return { deleted: true, user };
+      } catch (error) {
+        throw new InternalServerErrorException('Error deleting user');
+      }
     }
-    return this.userRepository.delete(id);
   }
 }

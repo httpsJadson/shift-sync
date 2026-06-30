@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Patch, Param, Delete, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Body, Patch, Param, Delete, UseGuards, ForbiddenException, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthTokenGuard } from 'src/common/guards/auth.guard';
@@ -6,6 +6,7 @@ import { ApiBearerAuth } from 'node_modules/@nestjs/swagger/dist/decorators/api-
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/common/enums/auxi.enums';
 import { ActiveUser } from 'src/common/decorators/active-user.decorator';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @ApiBearerAuth()
 @UseGuards(AuthTokenGuard)
@@ -15,8 +16,10 @@ export class UsersController {
 
   @Roles(UserRole.ADMIN)
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query() query: PaginationDto
+  ) {
+    return this.usersService.findAll(query);
   }
 
   @Roles(UserRole.EMPLOYEE)
