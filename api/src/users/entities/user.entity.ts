@@ -10,6 +10,7 @@ import {
 import { WorkSchedule } from '../../work-schedule/entities/work-schedule.entity';
 import { TimeRecord } from '../../time-record/entities/time-record.entity';
 import { UserRole } from '../../common/enums/auxi.enums';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -23,6 +24,7 @@ export class User {
   email: string;
 
   @Column({ name: 'password' })
+  @Exclude()
   password: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.EMPLOYEE })

@@ -16,8 +16,8 @@ export class AuthController {
   ) {}
 
   @Post('/register')
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(@Body() createUserDto: CreateUserDto, @ActiveUser('role') activeUserRole: string) {
+    return this.usersService.create(createUserDto, activeUserRole);
   }
 
   @Post("login")
