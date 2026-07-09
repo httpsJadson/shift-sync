@@ -115,10 +115,27 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    await this.findOne(id);
 
+    const user = await this.findOne(id);
+    if(!user) {
+      throw new NotFoundException(`User with ID "${id}" not found`);
+    }
+
+    if(!user.isActive) {
+      throw new BadRequestException('Cannot update an inactive user');
+    }
+
+    if (user.role === UserRole.ADMIN) {
+      throw new BadRequestException('Cannot change role of an admin user');
+    } 
+    
     try {
-      await this.userRepository.update(id, updateUserDto);
+      const toUpdate: any = { ...updateUserDto };
+      if (toUpdate.password) {
+        toUpdate.password = await this.hashingService.hash(toUpdate.password);
+      }
+
+      await this.userRepository.update(id, toUpdate);
       return this.findOne(id);
     } catch (error: any) {
       if (error.code === '23505') {

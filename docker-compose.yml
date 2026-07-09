@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:17-alpine
     container_name: shift_sync_db
-    restart: always
+    restart: no
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -13,12 +13,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   api:
+    env_file:
+      - .env
     build:
       context: ./api
       dockerfile: Dockerfile
     container_name: shift_sync_api
-    restart: always
+    restart: no
     environment:
+      - ENVIRONMENT=${ENVIRONMENT}
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=${DB_USERNAME}
@@ -37,7 +40,9 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL}
     container_name: shift_sync_web
-    restart: always
+    restart: no
+    env_file:
+      - .env
     ports:
       - "80:80"
     depends_on:

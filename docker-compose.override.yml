@@ -4,6 +4,8 @@ services:
     volumes:
       - ./api:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
 
@@ -19,3 +21,5 @@ services:
       - "5173:5173"
     environment:
       - VITE_API_URL=${VITE_API_URL}
+    env_file:
+      - .env

@@ -16,13 +16,13 @@ import { PaginationDto } from 'src/common/dtos/pagination.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.MANAGER)
   @Post()
   create(@Body() createUserDto: CreateUserDto, @ActiveUser('role') activeUserRole: string | null) {
     return this.usersService.create(createUserDto, activeUserRole);
   }
 
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.MANAGER)
   @Get()
   findAll(
     @Query() query: PaginationDto
@@ -30,7 +30,7 @@ export class UsersController {
     return this.usersService.findAll(query);
   }
 
-  @Roles(UserRole.EMPLOYEE)
+  @Roles(UserRole.MANAGER)
   @Get(':id')
   findOne(
     @Param('id') id: string, 
@@ -58,6 +58,12 @@ export class UsersController {
           throw new ForbiddenException('Você só pode atualizar seu próprio perfil');
       }
     }
+    // Prevent non-admin users from changing role or isActive via update
+    if (activeUserRole !== UserRole.ADMIN) {
+      if ((updateUserDto as any).role !== undefined) delete (updateUserDto as any).role;
+      if ((updateUserDto as any).isActive !== undefined) delete (updateUserDto as any).isActive;
+    }
+
     return this.usersService.update(id, updateUserDto);
   }
 

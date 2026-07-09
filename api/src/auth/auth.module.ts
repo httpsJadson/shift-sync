@@ -7,12 +7,15 @@ import { ConfigModule } from '@nestjs/config';
 import jwtConfig from '../common/config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from 'src/users/users.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RefreshToken } from './refresh-token.entity';
 
 @Global()
 @Module({
   imports: [
     ConfigModule.forFeature(jwtConfig),
     JwtModule.registerAsync(jwtConfig.asProvider()),
+    TypeOrmModule.forFeature([RefreshToken]),
     UsersModule,
   ],
   controllers: [AuthController],

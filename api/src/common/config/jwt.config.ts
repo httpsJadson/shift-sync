@@ -6,8 +6,8 @@ export default registerAs('jwt', () => {
         secret: process.env.JWT_SECRET,
         audi: process.env.JWT_TOKEN_AUDIENCE,
         issuer: process.env.JWT_TOKEN_ISSUE,
-        jwtTTL: parseInt(process.env.JWT_TTL as string) ?? 3600,
-        refreshTTL: parseInt(process.env.JWT_REFRESH_TTL as string) ?? 604800,
+        jwtTTL: Number(process.env.JWT_TTL) || 3600,
+        refreshTTL: Number(process.env.JWT_REFRESH_TTL) || 604800,
     }
 });
 //

@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -22,18 +23,25 @@ export class AuthController {
   }
 
   @Post("login")
+  @Throttle(5, 60)
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
+  @Throttle(10, 60)
   @Post("refresh")
   refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     return this.authService.refreshToken(refreshTokenDto);
   }
 
+  @Post('logout')
+  logout(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.logout(refreshTokenDto);
+  }
+
   @UseGuards(AuthTokenGuard)
   @ApiBearerAuth()
-  @Get("me")
+  @Get("/me")
   getMe(@ActiveUser('sub') userId: string) {
     return this.authService.getMe(userId);
   }
